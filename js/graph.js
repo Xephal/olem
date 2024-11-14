@@ -4,7 +4,7 @@ $(document).ready(function () {
   function loadGraph() {
     // Affiche le popover
     $('#popover4').show();
-    
+
     // Si le graphique CanvasJS existe déjà, on le détruit pour éviter un doublon
     if ($("#chartContainer").CanvasJSChart) {
       $("#chartContainer").CanvasJSChart().destroy();
@@ -15,7 +15,7 @@ $(document).ready(function () {
     $.ajax({
       url: `http://localhost:3000/transactions?accountId=${accountId}`, // Correction de l'URL
       type: 'GET',
-      success: function(transactions) {
+      success: function (transactions) {
         const dataPoints = calculateBalanceHistory(transactions);
 
         // Création du graphique CanvasJS avec les données des transactions
@@ -40,7 +40,7 @@ $(document).ready(function () {
         // Rendre le graphique
         chart.render();
       },
-      error: function() {
+      error: function () {
         toastr.error("Erreur lors du chargement des transactions pour le graphique.");
       }
     });

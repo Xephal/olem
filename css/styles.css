@@ -1,10 +1,11 @@
 /* Global Styles */
-body {
+html, body {
   font-family: Arial, sans-serif;
-  background-color: #f4f4f9;
   margin: 0;
   padding: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
@@ -73,6 +74,7 @@ body {
   padding: 20px;
   background-color: #f9f9f9;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-height: unset
 }
 
 
@@ -213,11 +215,11 @@ body {
 /* Styles pour le footer */
 footer {
   background-color: #f8f9fa;
-  position: fixed;
-  bottom: 0;
+  position: relative;
   width: 100%;
-  padding: 10px 15px;
+  padding: 3px 3px;
   font-size: 0.8em;
+  margin-top: 20px;
 }
 
 .footer-content {
@@ -230,7 +232,7 @@ footer {
 footer ul.nav {
   padding-left: 0;
   margin: 0;
-  display: flex; /* Affiche les éléments de la liste sur la même ligne */
+  display: flex;
   gap: 10px;
 }
 
@@ -238,7 +240,8 @@ footer ul.nav li {
   list-style: none;
 }
 
-/* Texte d'easter egg */
+
+/* Easter egg */
 .easter-egg {
   display: none; /* Masqué par défaut */
   color: #888;

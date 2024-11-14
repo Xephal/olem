@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
   const userId = localStorage.getItem('userId');
 
   // Charger et afficher les comptes de l'utilisateur
@@ -6,7 +6,7 @@ $(document).ready(function() {
     $.ajax({
       url: `http://localhost:3000/bankAccounts?userId=${userId}`,
       type: 'GET',
-      success: function(accounts) {
+      success: function (accounts) {
         if (accounts.length === 0) {
           $('#accountList').html('<p>Aucun compte trouvé. Veuillez ajouter un compte.</p>');
           $('#totalBalance').text('0.00');
@@ -20,7 +20,7 @@ $(document).ready(function() {
         // Afficher chaque compte dans la liste
         displayAccounts(accounts);
       },
-      error: function() {
+      error: function () {
         showFlashcard("Erreur lors du chargement des comptes.", "error");
       }
     });
@@ -54,13 +54,13 @@ $(document).ready(function() {
       });
 
       // Bouton "Supprimer le Compte" avec confirmation
-      accountElement.find('.delete-account').on('click', function() {
+      accountElement.find('.delete-account').on('click', function () {
         const accountId = $(this).data('account-id');
         confirmDeleteAccount(accountId);
       });
 
       // Soumission du formulaire de mise à jour du seuil bas
-      accountElement.find('.update-threshold-form').on('submit', function(event) {
+      accountElement.find('.update-threshold-form').on('submit', function (event) {
         event.preventDefault();
         const accountId = $(this).data('account-id');
         const newLowBalanceThreshold = parseFloat($(this).find(`#newLowBalanceThreshold-${accountId}`).val());
@@ -84,11 +84,11 @@ $(document).ready(function() {
       type: 'PATCH',
       data: JSON.stringify({ lowBalanceThreshold: newLowBalanceThreshold }),
       contentType: 'application/json',
-      success: function() {
+      success: function () {
         showFlashcard("Seuil bas mis à jour avec succès!", "success");
         loadAccounts();
       },
-      error: function() {
+      error: function () {
         showFlashcard("Erreur lors de la mise à jour du seuil bas.", "error");
       }
     });
@@ -100,11 +100,11 @@ $(document).ready(function() {
       $.ajax({
         url: `http://localhost:3000/bankAccounts/${accountId}`,
         type: 'DELETE',
-        success: function() {
+        success: function () {
           showFlashcard("Compte supprimé avec succès.", "success");
           loadAccounts();
         },
-        error: function() {
+        error: function () {
           showFlashcard("Erreur lors de la suppression du compte.", "error");
         }
       });
@@ -112,7 +112,7 @@ $(document).ready(function() {
   }
 
   // Soumission du formulaire pour ajouter un nouveau compte
-  $('#addAccountForm').on('submit', function(event) {
+  $('#addAccountForm').on('submit', function (event) {
     event.preventDefault();
     const name = $('#accountName').val();
     const type = $('#accountType').val();
@@ -122,11 +122,11 @@ $(document).ready(function() {
       type: 'POST',
       data: JSON.stringify({ name, type, balance: 0, userId, lowBalanceThreshold: 0 }),
       contentType: 'application/json',
-      success: function() {
+      success: function () {
         showFlashcard("Compte ajouté avec succès !", "success");
         loadAccounts();
       },
-      error: function() {
+      error: function () {
         showFlashcard("Erreur lors de l'ajout du compte.", "error");
       }
     });

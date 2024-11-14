@@ -306,12 +306,11 @@ $(document).ready(function () {
           transaction.type === "transfer-out"
             ? transaction.targetEmail
               ? `<p>Virement vers : ${transaction.targetEmail}</p>` // Virement externe
-              : `<p>Virement vers le compte: ${
-                  transaction.targetAccountName || "Compte inconnu"
-                }</p>` // Virement interne
+              : `<p>Virement vers le compte: ${transaction.targetAccountName || "Compte inconnu"
+              }</p>` // Virement interne
             : transaction.type === "transfer-in"
-            ? `<p>Virement depuis le compte: ${sourceName} (${sourceEmail})</p>` // Affiche `sourceEmail` ou `userEmail`
-            : "";
+              ? `<p>Virement depuis le compte: ${sourceName} (${sourceEmail})</p>` // Affiche `sourceEmail` ou `userEmail`
+              : "";
 
         $("#transactionList").append(`
           <div class="transaction-item card mt-2">
@@ -569,29 +568,37 @@ $(document).ready(function () {
       },
     });
   }
-  
+
   $(document).ready(function () {
     function syncRightColumnHeight() {
       const leftColumnHeight = $('.left-column').outerHeight();
       $('.right-column').css('max-height', leftColumnHeight);
     }
-  
+
     // Appeler la fonction au chargement de la page et lors des modifications de contenu
     syncRightColumnHeight();
-  
+
     // Ajuster la hauteur lorsque la fenêtre est redimensionnée
     $(window).resize(syncRightColumnHeight);
-  
+
     // Ajuster également en fonction de l’interaction utilisateur
     $('#transactionType, #transferType').on('change', syncRightColumnHeight);
   });
-  
+
 
   $(document).ready(function () {
     const $leftColumn = $('.left-column');
-    const $easterEggText = $('<p class="easter-egg">Merci d’avoir trouvé cet Easter egg ! 😊</p>');
+    const $easterEggText = $(`
+    <div class="easter-egg" style="display: none;">
+      <p>Merci d’avoir trouvé cet Easter egg ! 😊</p>
+      <img src="/images/ea.jpg" alt="Olem" width="100" height="100" class="mx-auto"/>
+    </div>
+  `);
     $leftColumn.append($easterEggText);
-  
+
+    // Variable pour suivre si "virement" a déjà été sélectionné
+    let transferSelected = false;
+
     $('#transactionType').on('change', function () {
       if ($(this).val() === 'transfer') {
         $('#transferTypeGroup').show();
@@ -599,13 +606,22 @@ $(document).ready(function () {
         $('#transferEmailGroup').hide();
         $('#transferAccountGroup').show();
         loadUserAccounts();
-        $easterEggText.hide(); // Cache l'Easter egg
+
+        // Cache l'easter egg et marque "virement" comme sélectionné
+        $easterEggText.hide();
+        transferSelected = true;
       } else {
         $('#transferTypeGroup, #transferEmailGroup, #transferAccountGroup').hide();
-        $easterEggText.show(); // Affiche l'Easter egg dans l’espace vide
+
+        // Affiche l'easter egg uniquement si "virement" a été sélectionné auparavant
+        if (transferSelected) {
+          $easterEggText.show();
+        }
       }
     });
-  
+
+
+
     // Afficher/masquer les groupes en fonction du type de transfert
     $('#transferType').on('change', function () {
       const transferType = $(this).val();
@@ -622,13 +638,13 @@ $(document).ready(function () {
       }
     });
   });
-  
+
   // Télécharger le CSV
   function downloadCSV(transactions) {
     const csvRows = [];
     const headers = ['Date', 'Type', 'Montant', 'Description'];
     csvRows.push(headers.join(','));
-  
+
     transactions.forEach(transaction => {
       const row = [
         new Date(transaction.date).toLocaleString(),
@@ -637,7 +653,7 @@ $(document).ready(function () {
       ];
       csvRows.push(row.join(','));
     });
-  
+
     const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -649,20 +665,20 @@ $(document).ready(function () {
   }
 
   // Attacher la fonction au bouton CSV
-  $('#downloadCsvButton').on('click', function() {
+  $('#downloadCsvButton').on('click', function () {
     $.ajax({
       url: `http://localhost:3000/transactions?accountId=${accountId}`, // Assurez-vous que `accountId` est défini
       type: 'GET',
-      success: function(transactions) {
+      success: function (transactions) {
         downloadCSV(transactions); // Appel de la fonction pour télécharger les transactions sous forme de CSV
       },
-      error: function() {
+      error: function () {
         showFlashcard("Erreur lors du chargement des transactions pour le téléchargement.", 'error');
       }
     });
   });
-  
-  
+
+
 
   // Init
   loadAccountDetails();

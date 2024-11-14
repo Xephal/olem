@@ -1,5 +1,5 @@
 // Fonction pour afficher ou stocker une notification Toastr
-window.showFlashcard = function(message, type = 'success', duration = 3000, immediate = true) {
+window.showFlashcard = function (message, type = 'success', duration = 3000, immediate = true) {
   const flashcards = JSON.parse(localStorage.getItem('flashcards')) || [];
   flashcards.push({ message, type, duration });
   localStorage.setItem('flashcards', JSON.stringify(flashcards));
@@ -55,9 +55,9 @@ function checkAuth() {
 function loadNavbar() {
   const currentPage = window.location.pathname.split('/').pop();
 
-  $('#navbar-container').load('./partials/navbar.html', function() {
+  $('#navbar-container').load('./partials/navbar.html', function () {
     const userId = localStorage.getItem('userId');
-    
+
     // Cache les boutons de profil et déconnexion sur les pages publiques ou profil
     if (['login.html', 'register.html', 'index.html', 'profile.html'].includes(currentPage)) {
       $('#profileButton, #logoutButton').hide();
@@ -66,7 +66,7 @@ function loadNavbar() {
       $('#profileButton, #logoutButton').show();
 
       // Gestion de la déconnexion
-      $('#logoutButton').on('click', function() {
+      $('#logoutButton').on('click', function () {
         localStorage.removeItem('userId');
         showFlashcard('Déconnecté avec succès !', 'success', 3000, false);
         setTimeout(() => window.location.href = 'index.html', 1500);
@@ -78,14 +78,28 @@ function loadNavbar() {
   });
 }
 
-$(document).ready(function() {
+$(document).ready(function () {
   $("#footer-container").load("./partials/footer.html");
 });
 
+// Synchroniser la hauteur de la colonne de droite avec celle de la gauche
+function syncColumnHeights() {
+  const leftColumnHeight = $('.left-column').outerHeight();
+  $('.right-column').css('max-height', leftColumnHeight);
+}
+
+$(document).ready(function () {
+  syncColumnHeights();
+  $(window).resize(syncColumnHeights);
+});
+
+
 // Initialiser les notifications, la navbar et l'authentification au chargement
-$(document).ready(function() {
+$(document).ready(function () {
   displayStoredFlashcards(); // Affiche les notifications stockées
   loadNavbar(); // Charge la navbar
   checkAuth(); // Vérifie l'authentification
+  syncColumnHeights();
+  $(window).resize(syncColumnHeights);
 });
 

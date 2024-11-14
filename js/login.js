@@ -16,7 +16,7 @@ $(document).ready(function () {
           showFlashcard('Logged in successfully!', 'success', 3000);
 
           // Log the login time, then redirect after logging completes
-          logLoginTime(user.id, function() {
+          logLoginTime(user.id, function () {
             window.location.href = 'dashboard.html';
           });
 

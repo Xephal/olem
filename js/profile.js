@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
   const userId = localStorage.getItem('userId');
   let currentEmail = ""; // Store the current user's email
 
@@ -7,19 +7,19 @@ $(document).ready(function() {
     $.ajax({
       url: `http://localhost:3000/users/${userId}`,
       type: 'GET',
-      success: function(user) {
+      success: function (user) {
         $('#userName').val(user.username);
         $('#userEmail').val(user.email);
         currentEmail = user.email; // Store the current email for comparison
       },
-      error: function() {
+      error: function () {
         showFlashcard("Erreur lors du chargement des informations de l'utilisateur.", 'error');
       }
     });
   }
 
   // Profile update with email and password verification
-  $('#profileForm').on('submit', function(event) {
+  $('#profileForm').on('submit', function (event) {
     event.preventDefault();
     const updatedEmail = $('#userEmail').val();
     const updatedUser = {
@@ -47,7 +47,7 @@ $(document).ready(function() {
       $.ajax({
         url: `http://localhost:3000/users?email=${updatedEmail}`,
         type: 'GET',
-        success: function(users) {
+        success: function (users) {
           const emailTaken = users.some(user => user.id !== parseInt(userId));
 
           if (emailTaken) {
@@ -57,7 +57,7 @@ $(document).ready(function() {
             updateUserProfile(updatedUser);
           }
         },
-        error: function() {
+        error: function () {
           showFlashcard("Erreur lors de la vérification de l'email.", 'error');
         }
       });
@@ -71,14 +71,14 @@ $(document).ready(function() {
       type: 'PATCH',
       data: JSON.stringify(updatedUser),
       contentType: 'application/json',
-      success: function() {
+      success: function () {
         showFlashcard('Les informations du profil ont été mises à jour avec succès!', 'success');
         currentEmail = updatedUser.email; // Update the stored email to prevent re-validation
         // Clear password fields after successful update
         $('#newPassword').val('');
         $('#confirmPassword').val('');
       },
-      error: function() {
+      error: function () {
         showFlashcard("Erreur lors de la mise à jour du profil.", 'error');
       }
     });
