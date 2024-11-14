@@ -38,12 +38,14 @@ $(document).ready(function () {
             currentBalance = calculatedBalance;
             $("#accountBalance").text(currentBalance.toFixed(2));
 
-            if (currentBalance < lowBalanceThreshold) {
-              showFlashcard(
-                "Alerte : Le solde est en dessous du seuil défini !",
-                "error"
-              );
-            }
+            // Condition pour afficher la notification de solde bas uniquement si on n'est pas sur la page dashboard
+            const isDashboardPage = window.location.pathname.includes('dashboard.html');
+            // if (currentBalance < lowBalanceThreshold && !isDashboardPage) {
+            //   showFlashcard(
+            //     "Alerte : Le solde est en dessous du seuil défini !",
+            //     "error"
+            //   );
+            // }
           },
           error: function () {
             showFlashcard(
@@ -216,12 +218,12 @@ $(document).ready(function () {
         lowBalanceThreshold = account.lowBalanceThreshold || 0;
         $("#accountBalance").text(currentBalance.toFixed(2));
 
-        if (currentBalance < lowBalanceThreshold) {
-          showFlashcard(
-            "Alerte : Le solde est en dessous du seuil défini !",
-            "error"
-          );
-        }
+        // if (currentBalance < lowBalanceThreshold) {
+        //   showFlashcard(
+        //     "Alerte : Le solde est en dessous du seuil défini !",
+        //     "error"
+        //   );
+        // }
       },
       error: function () {
         showFlashcard(
@@ -306,10 +308,9 @@ $(document).ready(function () {
           transaction.type === "transfer-out"
             ? transaction.targetEmail
               ? `<p>Virement vers : ${transaction.targetEmail}</p>` // Virement externe
-              : `<p>Virement vers le compte: ${transaction.targetAccountName || "Compte inconnu"
-              }</p>` // Virement interne
+              : `<p>Virement vers un autre compte interne</p>` // Virement interne
             : transaction.type === "transfer-in"
-              ? `<p>Virement depuis le compte: ${sourceName} (${sourceEmail})</p>` // Affiche `sourceEmail` ou `userEmail`
+              ? `<p>Virement reçu depuis un autre compte</p>` // Affiche `sourceEmail` ou `userEmail` dans le futur
               : "";
 
         $("#transactionList").append(`
@@ -386,8 +387,7 @@ $(document).ready(function () {
   });
 
   function processRegularTransaction(type, amount, date) {
-    const newBalance =
-      type === "deposit" ? currentBalance + amount : currentBalance - amount;
+    const newBalance = type === "deposit" ? currentBalance + amount : currentBalance - amount;
 
     $.ajax({
       url: `http://localhost:3000/transactions`,
@@ -396,6 +396,11 @@ $(document).ready(function () {
       contentType: "application/json",
       success: function () {
         updateAccountBalance(newBalance);
+
+        // Afficher l'alerte si le solde tombe en dessous du seuil après un retrait
+        if (type === "withdrawal" && newBalance < lowBalanceThreshold) {
+          showFlashcard("Alerte : Le solde est en dessous du seuil défini !", "error");
+        }
       },
       error: function () {
         showFlashcard("Impossible d'ajouter la transaction.", "error");
@@ -403,18 +408,9 @@ $(document).ready(function () {
     });
   }
 
-  function processTransferTransaction(
-    amount,
-    transferAccountId,
-    transferEmail,
-    date,
-    transferType
-  ) {
+  function processTransferTransaction(amount, transferAccountId, transferEmail, date, transferType) {
     if (transferAccountId === accountId) {
-      showFlashcard(
-        "Erreur : Vous ne pouvez pas faire un virement vers le même compte.",
-        "error"
-      );
+      showFlashcard("Erreur : Vous ne pouvez pas faire un virement vers le même compte.", "error");
       return;
     }
 
@@ -435,6 +431,11 @@ $(document).ready(function () {
       success: function () {
         updateAccountBalance(newBalance);
 
+        // Afficher l'alerte si le solde tombe en dessous du seuil après un virement sortant
+        if (newBalance < lowBalanceThreshold) {
+          showFlashcard("Alerte : Le solde est en dessous du seuil défini !", "error");
+        }
+
         if (transferType === "internal") {
           $.ajax({
             url: `http://localhost:3000/transactions`,
@@ -452,16 +453,12 @@ $(document).ready(function () {
             },
           });
         } else {
-          findRecipientCurrentAccountForTransfer(
-            amount,
-            accountId,
-            date,
-            newBalance
-          );
+          findRecipientCurrentAccountForTransfer(amount, accountId, date, newBalance);
         }
       },
     });
   }
+
 
   function findRecipientCurrentAccountForTransfer(
     amount,
@@ -543,31 +540,13 @@ $(document).ready(function () {
           data: JSON.stringify({ balance: newBalance }),
           contentType: "application/json",
           success: function () {
-            showFlashcard("Virement complété avec succès!", "success");
+            // showFlashcard("Virement complété avec succès!", "success");
           },
         });
       },
     });
   }
 
-  function updateTransferAccountBalance(transferAccountId, amount) {
-    $.ajax({
-      url: `http://localhost:3000/bankAccounts/${transferAccountId}`,
-      type: "GET",
-      success: function (account) {
-        const newBalance = account.balance + amount;
-        $.ajax({
-          url: `http://localhost:3000/bankAccounts/${transferAccountId}`,
-          type: "PATCH",
-          data: JSON.stringify({ balance: newBalance }),
-          contentType: "application/json",
-          success: function () {
-            showFlashcard("Virement complété avec succès!", "success");
-          },
-        });
-      },
-    });
-  }
 
   $(document).ready(function () {
     function syncRightColumnHeight() {
@@ -590,7 +569,7 @@ $(document).ready(function () {
     const $leftColumn = $('.left-column');
     const $easterEggText = $(`
     <div class="easter-egg" style="display: none;">
-      <p>Merci d’avoir trouvé cet Easter egg ! 😊</p>
+      <p>Petite pause babyfoot ?</p>
       <img src="/images/ea.jpg" alt="Olem" width="100" height="100" class="mx-auto"/>
     </div>
   `);
@@ -639,19 +618,30 @@ $(document).ready(function () {
     });
   });
 
+
   // Télécharger le CSV
   function downloadCSV(transactions) {
     const csvRows = [];
-    const headers = ['Date', 'Type', 'Montant', 'Description'];
-    csvRows.push(headers.join(','));
+    const headers = ['Date', 'Type', 'Montant', 'Solde apres transaction'];
+    csvRows.push(headers.join(',')); // En-tête avec la nouvelle colonne
+
+    let cumulativeBalance = 0;
 
     transactions.forEach(transaction => {
+      // Calcul du solde après la transaction
+      if (transaction.type === "deposit" || transaction.type === "transfer-in") {
+        cumulativeBalance += transaction.amount;
+      } else if (transaction.type === "withdrawal" || transaction.type === "transfer-out") {
+        cumulativeBalance -= transaction.amount;
+      }
+
       const row = [
-        new Date(transaction.date).toLocaleString(),
-        transaction.type,
-        transaction.amount.toFixed(2),
+        `"${new Date(transaction.date).toLocaleString()}"`, // Date entre guillemets pour Excel
+        `"${transaction.type}"`,                             // Type entre guillemets pour Excel
+        transaction.amount.toFixed(2),                       // Montant sans guillemets
+        cumulativeBalance.toFixed(2)                         // Solde après transaction
       ];
-      csvRows.push(row.join(','));
+      csvRows.push(row.join(';')); // Joindre les colonnes avec des virgules
     });
 
     const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
@@ -677,8 +667,6 @@ $(document).ready(function () {
       }
     });
   });
-
-
 
   // Init
   loadAccountDetails();

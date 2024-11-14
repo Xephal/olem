@@ -1,6 +1,19 @@
 {
-  "users": [],
+  "users": [
+    {
+      "id": "3455",
+      "username": "test@test.com",
+      "email": "test@test.com",
+      "password": "test@test.com"
+    }
+  ],
   "bankAccounts": [],
   "transactions": [],
-  "loginHistory": []
+  "loginHistory": [
+    {
+      "id": "6f99",
+      "userId": "3455",
+      "date": "2024-11-14T13:10:40.004Z"
+    }
+  ]
 }

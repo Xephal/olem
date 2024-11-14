@@ -5,7 +5,7 @@ $(document).ready(function () {
 
     const email = $('#loginEmail').val();
     const password = $('#loginPassword').val();
-
+  
     $.ajax({
       url: `http://localhost:3000/users?email=${email}`,
       type: 'GET',
@@ -30,6 +30,7 @@ $(document).ready(function () {
     });
   });
 
+  // Logout Button
   $('#logoutButton').on('click', function () {
     localStorage.removeItem('userId');
     showFlashcard('Logged out successfully!', 'success', 3000);
