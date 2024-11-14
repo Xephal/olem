@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historique des Transactions</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/22.1.5/css/dx.common.css">
+  <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/22.1.5/css/dx.light.css">
+
+  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+</head>
+
+<body onload="checkAuth()">
+  <div id="navbar-container"></div>
+
+  <div class="container transaction-page-container">
+    <div class="left-column">
+      <div class="alert alert-info">Solde Actuel : $<span id="accountBalance">0.00</span>
+        <a href="javascript:void(0);" id="graphIcon" class="float-right">
+          <i class="fas fa-chart-line"></i>Graphique
+        </a>
+      </div>
+      <button id="downloadCsvButton" class="btn btn-success mt-3">Télécharger l'Historique en CSV</button>
+
+      <form id="addTransactionForm" class="mt-4">
+        <h4>Ajouter une Nouvelle Transaction</h4>
+        <div class="form-group">
+          <label for="transactionType">Type de Transaction</label>
+          <select id="transactionType" class="form-control">
+            <option value="deposit">Dépôt</option>
+            <option value="withdrawal">Retrait</option>
+            <option value="transfer">Virement</option>
+          </select>
+        </div>
+
+        <!-- Transfer Type (Internal/External) -->
+        <div class="form-group" id="transferTypeGroup" style="display: none;">
+          <label for="transferType">Type de Virement</label>
+          <select id="transferType" class="form-control">
+            <option value="internal">Interne (vers mes comptes)</option>
+            <option value="external">Externe (vers un autre utilisateur)</option>
+          </select>
+        </div>
+
+        <!-- Email for External Transfers -->
+        <div class="form-group" id="transferEmailGroup" style="display: none;">
+          <label for="transferEmail">Adresse e-mail du Destinataire</label>
+          <input type="email" id="transferEmail" class="form-control" placeholder="Entrer l'e-mail du destinataire">
+        </div>
+
+        <!-- Account Selector for Internal Transfers -->
+        <div class="form-group" id="transferAccountGroup" style="display: none;">
+          <label for="transferAccountId">Compte de Destination</label>
+          <select id="transferAccountId" class="form-control">
+            <!-- Options will be loaded dynamically -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="transactionAmount">Montant</label>
+          <input type="number" id="transactionAmount" class="form-control" min="0.01" step="0.01" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Ajouter la Transaction</button>
+      </form>
+    </div>
+
+    <!-- Popover pour afficher le graphique -->
+    <div id="popover4" style="display: none; position: absolute; z-index: 9999;">
+      <div class="popover-body">
+        <div id="chartContainer" style="height: 400px; width: 100%;"></div>
+      </div>
+    </div>
+
+
+    <div class="right-column">
+      <div id="transactionFilters" class="d-flex mb-3">
+        <div class="form-group">
+          <label for="filterType">Type :</label>
+          <select id="filterType" class="form-control">
+            <option value="all">Tous</option>
+            <option value="deposit">Dépôt</option>
+            <option value="withdrawal">Retrait</option>
+            <option value="transfer">Virement</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filterSort">Trier par Date :</label>
+          <select id="filterSort" class="form-control">
+            <option value="desc">Plus Récent</option>
+            <option value="asc">Plus Ancien</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filterPeriod">Période :</label>
+          <select id="filterPeriod" class="form-control">
+            <option value="all">Toutes</option>
+            <option value="7">7 derniers jours</option>
+            <option value="30">30 derniers jours</option>
+            <option value="90">90 derniers jours</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="transactionList" class="transaction-list-container">
+        <p>Chargement des transactions...</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-container"></div>
+
+  <script>
+    // Fonction pour ouvrir le popover avec le graphique
+    $('#graphIcon').on('click', function () {
+      $('#popover4').show();
+      renderGraph();  // Afficher le graphique dans le popover
+    });
+  </script>
+
+
+  <!-- Scripts -->
+  <script src="https://cdn3.devexpress.com/jslib/22.1.5/js/dx.all.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/transactions.js"></script>
+  <script src="../js/graph.js"></script>
+  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+</body>
+
+</html>

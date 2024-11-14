@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historique de Connexion</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+</head>
+<body onload="checkAuth()">
+  <div id="navbar-container"></div>
+
+  <div class="container single-column-container mt-5">
+    <h2 class="page-title">Historique de Connexion</h2>
+    <p class="page-description">Consultez l'historique de vos connexions pour détecter des accès non autorisés.</p>
+
+    <div id="suspiciousAlert" class="alert alert-warning mt-3" style="display: none;">
+      Alerte : Connexion suspecte détectée depuis un emplacement inhabituel.
+    </div>
+
+    <div id="loginHistoryList" class="history-list-container mt-4">
+      <p>Chargement de l'historique de connexion...</p>
+    </div>
+  </div>
+
+  <div id="footer-container"></div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/login_history.js"></script>
+</body>
+</html>

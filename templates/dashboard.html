@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Bancaire - Tableau de Bord</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+</head>
+<body onload="checkAuth()">
+  <div id="navbar-container"></div>
+  
+  <div class="container dashboard-container">
+    <h2 class="dashboard-title">Tableau de Bord</h2>
+    
+    <div class="left-column">
+      <h4>Solde Total : $<span id="totalBalance">0.00</span></h4>
+      <a href="login_history.html" class="btn btn-info button">Voir l'historique de connexion</a>
+      
+      <form id="addAccountForm" class="mt-4">
+        <h4>Ajouter un Nouveau Compte</h4>
+        <div class="form-group">
+          <label for="accountName">Nom du Compte</label>
+          <input type="text" id="accountName" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="accountType">Type de Compte</label>
+          <select id="accountType" class="form-control">
+            <option value="Épargne">Épargne</option>
+            <option value="Courant">Courant</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Ajouter le Compte</button>
+      </form>
+    </div>
+    
+    <div class="right-column">
+      <h5>Vos Comptes</h5>
+      <div id="accountList" class="mt-3">
+        <!-- Comptes insérés ici -->
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-container"></div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/accounts.js"></script>
+</body>
+</html>
