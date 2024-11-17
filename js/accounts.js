@@ -1,24 +1,27 @@
 $(document).ready(function () {
   const userId = localStorage.getItem('userId');
 
-  // Charger et afficher les comptes de l'utilisateur
+  // Load and display user accounts
   function loadAccounts() {
     $.ajax({
-      url: `http://localhost:3000/bankAccounts?userId=${userId}`,
+      url: `http://127.0.0.1:8000/bankAccounts`, // Fetch all accounts and filter by userId in the frontend
       type: 'GET',
       success: function (accounts) {
-        if (accounts.length === 0) {
+        // Filter accounts for the current user
+        const userAccounts = accounts.filter(account => account.userId === userId);
+
+        if (userAccounts.length === 0) {
           $('#accountList').html('<p>Aucun compte trouvé. Veuillez ajouter un compte.</p>');
           $('#totalBalance').text('0.00');
           return;
         }
 
-        // Calculer le solde total de tous les comptes
-        let totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+        // Calculate total balance for the user's accounts
+        let totalBalance = userAccounts.reduce((sum, account) => sum + account.balance, 0);
         $('#totalBalance').text(totalBalance.toFixed(2));
 
-        // Afficher chaque compte dans la liste
-        displayAccounts(accounts);
+        // Display each account
+        displayAccounts(userAccounts);
       },
       error: function () {
         showFlashcard("Erreur lors du chargement des comptes.", "error");
@@ -26,7 +29,7 @@ $(document).ready(function () {
     });
   }
 
-  // Afficher les informations de chaque compte
+  // Display information for each account
   function displayAccounts(accounts) {
     $('#accountList').html('');
     accounts.forEach(account => {
@@ -48,18 +51,18 @@ $(document).ready(function () {
         </div>
       `);
 
-      // Bouton "Voir les Transactions"
+      // "View Transactions" button
       accountElement.find('.view-transactions').on('click', () => {
         window.location.href = `transactions.html?accountId=${account.id}`;
       });
 
-      // Bouton "Supprimer le Compte" avec confirmation
+      // "Delete Account" button with confirmation
       accountElement.find('.delete-account').on('click', function () {
         const accountId = $(this).data('account-id');
         confirmDeleteAccount(accountId);
       });
 
-      // Soumission du formulaire de mise à jour du seuil bas
+      // Form submission to update the low balance threshold
       accountElement.find('.update-threshold-form').on('submit', function (event) {
         event.preventDefault();
         const accountId = $(this).data('account-id');
@@ -77,12 +80,12 @@ $(document).ready(function () {
     });
   }
 
-  // Mettre à jour le seuil bas d'un compte
+  // Update the low balance threshold for an account
   function updateLowBalanceThreshold(accountId, newLowBalanceThreshold) {
     $.ajax({
-      url: `http://localhost:3000/bankAccounts/${accountId}`,
-      type: 'PATCH',
-      data: JSON.stringify({ lowBalanceThreshold: newLowBalanceThreshold }),
+      url: `http://127.0.0.1:8000/bankAccounts/${accountId}`,
+      type: 'PATCH', // Assuming FastAPI supports PATCH for updates
+      data: JSON.stringify({ low_balance_threshold: newLowBalanceThreshold }),
       contentType: 'application/json',
       success: function () {
         showFlashcard("Seuil bas mis à jour avec succès!", "success");
@@ -94,11 +97,11 @@ $(document).ready(function () {
     });
   }
 
-  // Fonction de confirmation de suppression de compte
+  // Confirm and delete an account
   function confirmDeleteAccount(accountId) {
     if (confirm("Êtes-vous sûr de vouloir supprimer ce compte ? Cette action est irréversible.")) {
       $.ajax({
-        url: `http://localhost:3000/bankAccounts/${accountId}`,
+        url: `http://127.0.0.1:8000/bankAccounts/${accountId}`,
         type: 'DELETE',
         success: function () {
           showFlashcard("Compte supprimé avec succès.", "success");
@@ -111,16 +114,16 @@ $(document).ready(function () {
     }
   }
 
-  // Soumission du formulaire pour ajouter un nouveau compte
+  // Submit the form to add a new account
   $('#addAccountForm').on('submit', function (event) {
     event.preventDefault();
     const name = $('#accountName').val();
     const type = $('#accountType').val();
 
     $.ajax({
-      url: 'http://localhost:3000/bankAccounts',
+      url: 'http://127.0.0.1:8000/bankAccounts',
       type: 'POST',
-      data: JSON.stringify({ name, type, balance: 0, userId, lowBalanceThreshold: 0 }),
+      data: JSON.stringify({ id: generateUUID(), name, type, balance: 0, userId, lowBalanceThreshold: 0 }),
       contentType: 'application/json',
       success: function () {
         showFlashcard("Compte ajouté avec succès !", "success");
@@ -132,6 +135,15 @@ $(document).ready(function () {
     });
   });
 
-  // Initialisation : Charger les comptes
+  // Utility function to generate UUIDs
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = (Math.random() * 16) | 0,
+        v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  // Initialize: Load accounts
   loadAccounts();
 });
