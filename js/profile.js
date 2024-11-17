@@ -5,7 +5,7 @@ $(document).ready(function () {
   // Load user information
   function loadUserProfile() {
     $.ajax({
-      url: `http://localhost:3000/users/${userId}`,
+      url: `http://127.0.0.1:8000/users/${userId}`, // Updated to FastAPI URL
       type: 'GET',
       success: function (user) {
         $('#userName').val(user.username);
@@ -45,10 +45,10 @@ $(document).ready(function () {
     } else {
       // Check if the new email is already in use
       $.ajax({
-        url: `http://localhost:3000/users?email=${updatedEmail}`,
+        url: `http://127.0.0.1:8000/users`, // Fetch all users and verify in the frontend
         type: 'GET',
         success: function (users) {
-          const emailTaken = users.some(user => user.id !== parseInt(userId));
+          const emailTaken = users.some(user => user.email === updatedEmail && user.id !== userId);
 
           if (emailTaken) {
             showFlashcard('Cet email est déjà utilisé par un autre compte.', 'error');
@@ -67,8 +67,8 @@ $(document).ready(function () {
   // Function to update user profile
   function updateUserProfile(updatedUser) {
     $.ajax({
-      url: `http://localhost:3000/users/${userId}`,
-      type: 'PATCH',
+      url: `http://127.0.0.1:8000/users/${userId}`, // Updated to FastAPI URL
+      type: 'PATCH', // Using PATCH to update specific fields
       data: JSON.stringify(updatedUser),
       contentType: 'application/json',
       success: function () {

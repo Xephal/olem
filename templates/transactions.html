@@ -5,14 +5,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Historique des Transactions</title>
+
+  <!-- CSS -->
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-  <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/22.1.5/css/dx.common.css">
-  <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/22.1.5/css/dx.light.css">
 
-  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  <!-- jQuery (Load Early) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    if (typeof jQuery === "undefined") {
+      document.write('<script src="../js/jquery-3.6.0.min.js"><\/script>');
+    }
+  </script>
 </head>
 
 <body onload="checkAuth()">
@@ -20,7 +26,8 @@
 
   <div class="container transaction-page-container">
     <div class="left-column">
-      <div class="alert alert-info">Solde Actuel : $<span id="accountBalance">0.00</span>
+      <div class="alert alert-info">
+        Solde Actuel : $<span id="accountBalance">0.00</span>
         <a href="javascript:void(0);" id="graphIcon" class="float-right">
           <i class="fas fa-chart-line"></i>Graphique
         </a>
@@ -38,7 +45,6 @@
           </select>
         </div>
 
-        <!-- Transfer Type (Internal/External) -->
         <div class="form-group" id="transferTypeGroup" style="display: none;">
           <label for="transferType">Type de Virement</label>
           <select id="transferType" class="form-control">
@@ -47,13 +53,11 @@
           </select>
         </div>
 
-        <!-- Email for External Transfers -->
         <div class="form-group" id="transferEmailGroup" style="display: none;">
           <label for="transferEmail">Adresse e-mail du Destinataire</label>
           <input type="email" id="transferEmail" class="form-control" placeholder="Entrer l'e-mail du destinataire">
         </div>
 
-        <!-- Account Selector for Internal Transfers -->
         <div class="form-group" id="transferAccountGroup" style="display: none;">
           <label for="transferAccountId">Compte de Destination</label>
           <select id="transferAccountId" class="form-control">
@@ -69,13 +73,11 @@
       </form>
     </div>
 
-    <!-- Popover pour afficher le graphique -->
     <div id="popover4" style="display: none; position: absolute; z-index: 9999;">
       <div class="popover-body">
         <div id="chartContainer" style="height: 400px; width: 100%;"></div>
       </div>
     </div>
-
 
     <div class="right-column">
       <div id="transactionFilters" class="d-flex mb-3">
@@ -114,23 +116,24 @@
 
   <div id="footer-container"></div>
 
+  <!-- Required Scripts -->
+  <script src="https://cdn3.devexpress.com/jslib/22.1.5/js/dx.all.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/graph.js"></script>
+  <script src="../js/transactions.js"></script>
+
+  <!-- Inline Scripts Should Run After jQuery -->
   <script>
-    // Fonction pour ouvrir le popover avec le graphique
-    $('#graphIcon').on('click', function () {
-      $('#popover4').show();
-      renderGraph();  // Afficher le graphique dans le popover
+    $(document).ready(function () {
+      // Fonction pour ouvrir le popover avec le graphique
+      $("#graphIcon").on("click", function () {
+        $("#popover4").show();
+        renderGraph(); // Ensure renderGraph is defined in graph.js
+      });
     });
   </script>
-
-
-  <!-- Scripts -->
-  <script src="https://cdn3.devexpress.com/jslib/22.1.5/js/dx.all.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-  <script src="../js/main.js"></script>
-  <script src="../js/transactions.js"></script>
-  <script src="../js/graph.js"></script>
-  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 </body>
 
 </html>

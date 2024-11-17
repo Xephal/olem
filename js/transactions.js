@@ -8,29 +8,25 @@ $(document).ready(function () {
   // Charger les détails du compte actuel et calculer le solde basé sur les transactions
   function loadAccountDetails() {
     $.ajax({
-      url: `http://localhost:3000/bankAccounts/${accountId}`,
+      url: `http://127.0.0.1:8000/bankAccounts/${accountId}`, // Updated to FastAPI endpoint
       type: "GET",
       success: function (account) {
-        lowBalanceThreshold = account.lowBalanceThreshold || 0;
+        lowBalanceThreshold = account.low_balance_threshold || 0; // Match backend field names
+        currentBalance = account.balance || 0; // Current balance from backend
+        $("#accountBalance").text(currentBalance.toFixed(2));
 
         // Charger les transactions pour calculer le solde total
         $.ajax({
-          url: `http://localhost:3000/transactions?accountId=${accountId}`,
+          url: `http://127.0.0.1:8000/transactions?account_id=${accountId}`, // FastAPI query param
           type: "GET",
           success: function (transactions) {
             let calculatedBalance = 0;
 
             // Calculer le solde en fonction de toutes les transactions
             transactions.forEach((transaction) => {
-              if (
-                transaction.type === "deposit" ||
-                transaction.type === "transfer-in"
-              ) {
+              if (transaction.type === "deposit" || transaction.type === "transfer-in") {
                 calculatedBalance += transaction.amount;
-              } else if (
-                transaction.type === "withdrawal" ||
-                transaction.type === "transfer-out"
-              ) {
+              } else if (transaction.type === "withdrawal" || transaction.type === "transfer-out") {
                 calculatedBalance -= transaction.amount;
               }
             });
@@ -38,14 +34,14 @@ $(document).ready(function () {
             currentBalance = calculatedBalance;
             $("#accountBalance").text(currentBalance.toFixed(2));
 
-            // Condition pour afficher la notification de solde bas uniquement si on n'est pas sur la page dashboard
-            const isDashboardPage = window.location.pathname.includes('dashboard.html');
-            // if (currentBalance < lowBalanceThreshold && !isDashboardPage) {
-            //   showFlashcard(
-            //     "Alerte : Le solde est en dessous du seuil défini !",
-            //     "error"
-            //   );
-            // }
+            // Notification si le solde est sous le seuil
+            const isDashboardPage = window.location.pathname.includes("dashboard.html");
+            if (currentBalance < lowBalanceThreshold && !isDashboardPage) {
+              showFlashcard(
+                "Alerte : Le solde est en dessous du seuil défini !",
+                "error"
+              );
+            }
           },
           error: function () {
             showFlashcard(
@@ -66,15 +62,14 @@ $(document).ready(function () {
 
   // Charger les comptes de l'utilisateur actuel pour les virements internes
   function loadUserAccounts() {
+    const userId = localStorage.getItem("userId");
     $.ajax({
-      url: `http://localhost:3000/bankAccounts?userId=${localStorage.getItem(
-        "userId"
-      )}`,
+      url: `http://127.0.0.1:8000/bankAccounts?user_id=${userId}`, // FastAPI query parameter
       type: "GET",
       success: function (accounts) {
         $("#transferAccountId").html(
           accounts
-            .filter((acc) => acc.id !== parseInt(accountId))
+            .filter((acc) => acc.id !== accountId) // Match account ID correctly
             .map((acc) => `<option value="${acc.id}">${acc.name}</option>`)
             .join("")
         );
@@ -91,14 +86,12 @@ $(document).ready(function () {
   // Charger tous les utilisateurs pour le virement externe
   function loadUsers() {
     $.ajax({
-      url: `http://localhost:3000/users`,
+      url: `http://127.0.0.1:8000/users`, // FastAPI endpoint for fetching users
       type: "GET",
       success: function (users) {
         $("#transferEmail").html(
           users
-            .map(
-              (user) => `<option value="${user.email}">${user.email}</option>`
-            )
+            .map((user) => `<option value="${user.email}">${user.email}</option>`)
             .join("")
         );
       },
@@ -109,7 +102,6 @@ $(document).ready(function () {
   }
 
   // Affichage conditionnel pour les virements internes ou externes
-
   $("#transactionType").on("change", function () {
     if ($(this).val() === "transfer") {
       // Show the transfer type dropdown and set default to 'internal'
@@ -121,22 +113,7 @@ $(document).ready(function () {
       loadUserAccounts(); // Load accounts for internal transfers
     } else {
       // Hide transfer-specific fields if not a transfer
-      $(
-        "#transferTypeGroup, #transferEmailGroup, #transferAccountGroup"
-      ).hide();
-    }
-  });
-
-  // Show/hide email or account selection based on transfer type
-  $("#transferType").on("change", function () {
-    if ($(this).val() === "internal") {
-      $("#transferEmailGroup").hide();
-      $("#transferAccountGroup").show();
-      loadUserAccounts(); // Load internal accounts
-    } else if ($(this).val() === "external") {
-      $("#transferEmailGroup").show();
-      $("#transferAccountGroup").hide();
-      loadUsers(); // Load external user emails
+      $("#transferTypeGroup, #transferEmailGroup, #transferAccountGroup").hide();
     }
   });
 
@@ -162,12 +139,12 @@ $(document).ready(function () {
     const selectedEmail = $(this).val();
     if (selectedEmail) {
       $.ajax({
-        url: `http://localhost:3000/users?email=${selectedEmail}`,
+        url: `http://127.0.0.1:8000/users?email=${encodeURIComponent(selectedEmail)}`, // Updated endpoint
         type: "GET",
         success: function (users) {
-          const userId = users[0]?.id;
+          const userId = users[0]?.id; // Extract user ID from response
           if (userId) {
-            findRecipientCurrentAccount(userId);
+            findRecipientCurrentAccount(userId); // Call the next function
           }
         },
         error: function () {
@@ -183,7 +160,7 @@ $(document).ready(function () {
   // Trouver automatiquement le premier compte courant du destinataire
   function findRecipientCurrentAccount(userId) {
     $.ajax({
-      url: `http://localhost:3000/bankAccounts?userId=${userId}&type=Courant`,
+      url: `http://127.0.0.1:8000/bankAccounts?user_id=${userId}&type=Courant`, // Updated parameters
       type: "GET",
       success: function (accounts) {
         if (accounts.length === 0) {
@@ -193,7 +170,7 @@ $(document).ready(function () {
           );
           $("#transferAccountId").html("");
         } else {
-          const primaryCurrentAccount = accounts[0];
+          const primaryCurrentAccount = accounts[0]; // Select the first account
           $("#transferAccountId").html(
             `<option value="${primaryCurrentAccount.id}" selected>${primaryCurrentAccount.name}</option>`
           );
@@ -211,13 +188,14 @@ $(document).ready(function () {
   // Charger les détails du compte actuel
   function loadAccountDetails() {
     $.ajax({
-      url: `http://localhost:3000/bankAccounts/${accountId}`,
+      url: `http://127.0.0.1:8000/bankAccounts/${accountId}`, // Updated endpoint
       type: "GET",
       success: function (account) {
-        currentBalance = account.balance;
-        lowBalanceThreshold = account.lowBalanceThreshold || 0;
+        currentBalance = account.balance || 0; // Use 0 if balance is undefined
+        lowBalanceThreshold = account.low_balance_threshold || 0; // Match FastAPI field
         $("#accountBalance").text(currentBalance.toFixed(2));
 
+        // Optional: Notify if balance is below threshold
         // if (currentBalance < lowBalanceThreshold) {
         //   showFlashcard(
         //     "Alerte : Le solde est en dessous du seuil défini !",
@@ -237,17 +215,18 @@ $(document).ready(function () {
   // Charger et afficher les transactions
   function loadTransactions() {
     $.ajax({
-      url: `http://localhost:3000/transactions?accountId=${accountId}`,
+      url: `http://127.0.0.1:8000/transactions?account_id=${accountId}`, // Updated endpoint and query parameter
       type: "GET",
       success: function (transactions) {
         allTransactions = transactions;
-        applyFilters({ type: "all", sort: "desc", period: "all" }); // Filtres par défaut
+        applyFilters({ type: "all", sort: "desc", period: "all" }); // Default filters
       },
       error: function () {
         showFlashcard("Impossible de charger les transactions.", "error");
       },
     });
   }
+
 
   // Application des filtres sur les transactions
   function applyFilters(filters) {
@@ -386,18 +365,24 @@ $(document).ready(function () {
     }
   });
 
+  //
   function processRegularTransaction(type, amount, date) {
     const newBalance = type === "deposit" ? currentBalance + amount : currentBalance - amount;
 
     $.ajax({
-      url: `http://localhost:3000/transactions`,
+      url: `http://127.0.0.1:8000/transactions`, // Updated endpoint
       type: "POST",
-      data: JSON.stringify({ accountId, date, type, amount }),
+      data: JSON.stringify({
+        account_id: accountId, // Updated field name for FastAPI
+        date,
+        type,
+        amount,
+      }),
       contentType: "application/json",
       success: function () {
         updateAccountBalance(newBalance);
 
-        // Afficher l'alerte si le solde tombe en dessous du seuil après un retrait
+        // Show alert if balance drops below the threshold after a withdrawal
         if (type === "withdrawal" && newBalance < lowBalanceThreshold) {
           showFlashcard("Alerte : Le solde est en dessous du seuil défini !", "error");
         }
@@ -408,6 +393,7 @@ $(document).ready(function () {
     });
   }
 
+  //
   function processTransferTransaction(amount, transferAccountId, transferEmail, date, transferType) {
     if (transferAccountId === accountId) {
       showFlashcard("Erreur : Vous ne pouvez pas faire un virement vers le même compte.", "error");
@@ -417,35 +403,36 @@ $(document).ready(function () {
     const newBalance = currentBalance - amount;
 
     $.ajax({
-      url: `http://localhost:3000/transactions`,
+      url: `http://127.0.0.1:8000/transactions`, // Updated endpoint
       type: "POST",
       data: JSON.stringify({
-        accountId,
+        account_id: accountId, // Updated field name for FastAPI
         date,
         type: "transfer-out",
         amount: -amount,
-        targetAccountId: transferAccountId,
-        targetEmail: transferEmail,
+        target_account_id: transferAccountId, // Updated for FastAPI
+        target_email: transferEmail,
       }),
       contentType: "application/json",
       success: function () {
         updateAccountBalance(newBalance);
 
-        // Afficher l'alerte si le solde tombe en dessous du seuil après un virement sortant
+        // Show alert if balance drops below the threshold after an outgoing transfer
         if (newBalance < lowBalanceThreshold) {
           showFlashcard("Alerte : Le solde est en dessous du seuil défini !", "error");
         }
 
+        // Handle internal transfer logic
         if (transferType === "internal") {
           $.ajax({
-            url: `http://localhost:3000/transactions`,
+            url: `http://127.0.0.1:8000/transactions`, // Updated endpoint
             type: "POST",
             data: JSON.stringify({
-              accountId: transferAccountId,
+              account_id: transferAccountId, // Destination account ID
               date,
               type: "transfer-in",
               amount,
-              sourceAccountId: accountId,
+              source_account_id: accountId, // Updated for FastAPI
             }),
             contentType: "application/json",
             success: function () {
@@ -453,11 +440,16 @@ $(document).ready(function () {
             },
           });
         } else {
+          // External transfer logic
           findRecipientCurrentAccountForTransfer(amount, accountId, date, newBalance);
         }
       },
+      error: function () {
+        showFlashcard("Impossible d'effectuer le virement.", "error");
+      },
     });
   }
+
 
 
   function findRecipientCurrentAccountForTransfer(
@@ -468,13 +460,13 @@ $(document).ready(function () {
   ) {
     const selectedEmail = $("#transferEmail").val();
     $.ajax({
-      url: `http://localhost:3000/users?email=${selectedEmail}`,
+      url: `http://127.0.0.1:8000/users?email=${encodeURIComponent(selectedEmail)}`, // Updated endpoint
       type: "GET",
       success: function (users) {
         const userId = users[0]?.id;
         if (userId) {
           $.ajax({
-            url: `http://localhost:3000/bankAccounts?userId=${userId}&type=Courant`,
+            url: `http://127.0.0.1:8000/bankAccounts?user_id=${userId}&type=Courant`, // Updated parameters
             type: "GET",
             success: function (accounts) {
               if (accounts.length === 0) {
@@ -486,19 +478,25 @@ $(document).ready(function () {
               }
               const destinationAccountId = accounts[0].id;
               $.ajax({
-                url: `http://localhost:3000/transactions`,
+                url: `http://127.0.0.1:8000/transactions`, // Updated endpoint
                 type: "POST",
                 data: JSON.stringify({
-                  accountId: destinationAccountId,
+                  account_id: destinationAccountId,
                   date,
                   type: "transfer-in",
                   amount,
-                  sourceAccountId,
+                  source_account_id: sourceAccountId, // Updated parameter
                 }),
                 contentType: "application/json",
                 success: function () {
                   updateAccountBalance(newBalance);
                   updateTransferAccountBalance(destinationAccountId, amount);
+                },
+                error: function () {
+                  showFlashcard(
+                    "Erreur lors de l'ajout de la transaction pour le destinataire.",
+                    "error"
+                  );
                 },
               });
             },
@@ -511,12 +509,19 @@ $(document).ready(function () {
           });
         }
       },
+      error: function () {
+        showFlashcard(
+          "Erreur lors de la recherche des informations du destinataire.",
+          "error"
+        );
+      },
     });
   }
 
+
   function updateAccountBalance(newBalance) {
     $.ajax({
-      url: `http://localhost:3000/bankAccounts/${accountId}`,
+      url: `http://127.0.0.1:8000/bankAccounts/${accountId}`, // Updated endpoint
       type: "PATCH",
       data: JSON.stringify({ balance: newBalance }),
       contentType: "application/json",
@@ -525,27 +530,47 @@ $(document).ready(function () {
         loadTransactions();
         loadAccountDetails();
       },
+      error: function () {
+        showFlashcard(
+          "Erreur lors de la mise à jour du solde du compte.",
+          "error"
+        );
+      },
     });
   }
 
+
   function updateTransferAccountBalance(transferAccountId, amount) {
     $.ajax({
-      url: `http://localhost:3000/bankAccounts/${transferAccountId}`,
+      url: `http://127.0.0.1:8000/bankAccounts/${transferAccountId}`, // Updated endpoint
       type: "GET",
       success: function (account) {
         const newBalance = account.balance + amount;
         $.ajax({
-          url: `http://localhost:3000/bankAccounts/${transferAccountId}`,
+          url: `http://127.0.0.1:8000/bankAccounts/${transferAccountId}`, // Updated endpoint
           type: "PATCH",
           data: JSON.stringify({ balance: newBalance }),
           contentType: "application/json",
           success: function () {
-            // showFlashcard("Virement complété avec succès!", "success");
+            // You can add a flashcard or log success if needed
+          },
+          error: function () {
+            showFlashcard(
+              "Erreur lors de la mise à jour du solde du compte destinataire.",
+              "error"
+            );
           },
         });
       },
+      error: function () {
+        showFlashcard(
+          "Erreur lors de la récupération des informations du compte destinataire.",
+          "error"
+        );
+      },
     });
   }
+
 
 
   $(document).ready(function () {
@@ -655,18 +680,22 @@ $(document).ready(function () {
   }
 
   // Attacher la fonction au bouton CSV
-  $('#downloadCsvButton').on('click', function () {
+  $("#downloadCsvButton").on("click", function () {
     $.ajax({
-      url: `http://localhost:3000/transactions?accountId=${accountId}`, // Assurez-vous que `accountId` est défini
-      type: 'GET',
+      url: `http://127.0.0.1:8000/transactions?account_id=${accountId}`, // Updated endpoint
+      type: "GET",
       success: function (transactions) {
-        downloadCSV(transactions); // Appel de la fonction pour télécharger les transactions sous forme de CSV
+        downloadCSV(transactions); // Call the function to download transactions as CSV
       },
       error: function () {
-        showFlashcard("Erreur lors du chargement des transactions pour le téléchargement.", 'error');
-      }
+        showFlashcard(
+          "Erreur lors du chargement des transactions pour le téléchargement.",
+          "error"
+        );
+      },
     });
   });
+
 
   // Init
   loadAccountDetails();

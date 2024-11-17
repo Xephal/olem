@@ -1,25 +1,24 @@
 $(document).ready(function () {
-
-  // Fonction pour charger le graphique avec les variations du solde du compte
+  // Function to load the graph showing account balance variations
   function loadGraph() {
-    // Affiche le popover
+    // Show the popover
     $('#popover4').show();
 
-    // Si le graphique CanvasJS existe déjà, on le détruit pour éviter un doublon
+    // Destroy existing CanvasJS chart to avoid duplication
     if ($("#chartContainer").CanvasJSChart) {
       $("#chartContainer").CanvasJSChart().destroy();
     }
 
-    // Récupérer les transactions et calculer les variations
+    // Get the accountId from the URL
     const accountId = new URLSearchParams(window.location.search).get('accountId');
     $.ajax({
-      url: `http://localhost:3000/transactions?accountId=${accountId}`, // Correction de l'URL
+      url: `http://127.0.0.1:8000/transactions?accountId=${accountId}`, // Updated to match FastAPI URL
       type: 'GET',
       success: function (transactions) {
         const dataPoints = calculateBalanceHistory(transactions);
 
-        // Création du graphique CanvasJS avec les données des transactions
-        var chart = new CanvasJS.Chart("chartContainer", {
+        // Create the CanvasJS chart with transaction data
+        const chart = new CanvasJS.Chart("chartContainer", {
           title: {
             text: "Historique des Variations de Solde"
           },
@@ -37,7 +36,7 @@ $(document).ready(function () {
           }]
         });
 
-        // Rendre le graphique
+        // Render the chart
         chart.render();
       },
       error: function () {
@@ -46,47 +45,47 @@ $(document).ready(function () {
     });
   }
 
-  // Fonction pour calculer l'historique des variations de solde
+  // Function to calculate the balance history for the graph
   function calculateBalanceHistory(transactions) {
     let balance = 0;
     let dataPoints = [];
 
-    // Ajout d'un point de départ à 0 au début du graphique
+    // Add a starting point at 0 at the beginning of the graph
     const firstTransactionDate = transactions.length ? new Date(transactions[0].date) : new Date();
     dataPoints.push({ x: firstTransactionDate, y: 0 });
 
-    // Tri des transactions par date croissante
+    // Sort transactions by ascending date
     transactions.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Parcours des transactions et calcul des variations
+    // Iterate through transactions and calculate balance variations
     transactions.forEach(transaction => {
       const amount = transaction.amount;
       const type = transaction.type;
       const date = new Date(transaction.date);
 
-      // Mise à jour du solde en fonction du type de transaction
-      if (type === 'deposit') {
-        balance += amount; // Augmenter le solde pour un dépôt
-      } else if (type === 'withdrawal') {
-        balance -= amount; // Diminuer le solde pour un retrait
+      // Update balance based on transaction type
+      if (type === 'deposit' || type === 'transfer-in') {
+        balance += amount; // Increase balance for deposit or incoming transfer
+      } else if (type === 'withdrawal' || type === 'transfer-out') {
+        balance -= amount; // Decrease balance for withdrawal or outgoing transfer
       }
 
-      // Ajouter le solde au graphique après chaque transaction
+      // Add the updated balance to the graph
       dataPoints.push({ x: date, y: balance });
     });
 
     return dataPoints;
   }
 
-  // Au clic sur l'icône du graphique, charge et affiche le graphique dans le popover
+  // On click of the graph icon, load and display the graph in the popover
   $('#graphIcon').on('click', function () {
-    loadGraph(); // Charge le graphique dans le popover
+    loadGraph(); // Load the graph in the popover
   });
 
-  // Fermer le popover lorsqu'on clique en dehors de celui-ci
+  // Close the popover when clicking outside of it
   $(document).on('click', function (e) {
     if (!$(e.target).closest('#popover4, #graphIcon').length) {
-      $('#popover4').hide();  // Cache le popover si on clique ailleurs
+      $('#popover4').hide(); // Hide the popover if clicking elsewhere
     }
   });
 });
